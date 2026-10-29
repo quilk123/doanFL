@@ -1,0 +1,8 @@
+# Bước 2: FL thật — PyTorch CPU (mục 11). Bước 5: OpenFHE (wheel cp312, Ubuntu 24.04 — bản .22.4 là cp310).
+--extra-index-url https://download.pytorch.org/whl/cpu
+numpy
+msgpack
+pyyaml
+torch==2.8.0+cpu
+torchvision==0.23.0+cpu
+openfhe==1.5.1.0.24.4

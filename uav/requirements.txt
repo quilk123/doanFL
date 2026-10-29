@@ -1,0 +1,5 @@
+# Bước 1 (khung rỗng) chỉ cần 3 gói nhẹ.
+# Bước 2+ bổ sung: torch (CPU), onnx/onnxruntime; bước 5: openfhe.
+numpy
+msgpack
+pyyaml

@@ -1,0 +1,61 @@
+# Mẫu cấu hình testbed — mọi tham số đặt ở đây (Claude đọc file này, không hard-code)
+rounds: 15
+seed: 0
+policy: fixed10             # fixed10 (CHÍNH: FAS p = 0,1, khóa xáo chỉ ở thiết bị) | no_he | full_he | fas10 | fas50 (bs giữ khóa xáo) | adaptive (hướng phát triển)
+t_max: auto                 # giây (thang Pi 4) hoặc auto = T_train_Pi4 + t_max_margin_s
+                            #   T_train_Pi4 = costs/cost_fixed.json T_train_epoch_s (đo bước 3, đã ×fidelity)
+                            #   máy này: 36,93 + 26 ≈ 62,9 s (reference: T_max 50 = 23,8 + 26,2)
+t_max_margin_s: 26          # khoảng dành cho mã hóa + truyền, giữ như reference_sim
+safety_margin_s: 1.5        # chỉ dùng cho policy adaptive (hướng phát triển). δ: adaptive chọn p với t_max − δ (cờ trễ hạn vẫn so với t_max). δ = phân vị 95% của
+                            #   (vòng đo thật − dự báo round_time) ở bước 7, làm tròn lên bội 0,5 s (tools/calib_margin.py:
+                            #   15 vòng, lệch 0,37…1,15 s, p95 = 1,10 s). Nguyên nhân: round_time bỏ qua bs cộng/ghép,
+                            #   cập nhật mô hình, phần đầu gói.
+p_min: 0.2                  # chỉ dùng cho policy adaptive (hướng phát triển)
+p_step: 0.1                 # chỉ dùng cho policy adaptive (hướng phát triển)
+fidelity: 1.4               # hệ số hiệu chỉnh thời gian tính toán sang Pi 4 (Priv-FedTL)
+dp:
+  clip: 2.5                 # ngưỡng C — chỉ dùng cho policy adaptive (hướng phát triển)
+  lam: 3                    # biên độ nhiễu: fixed10/fas* sd = λ·RMS(phần rõ); adaptive sd = λ·C/√M (×n_k/n)
+he:
+  ring_dim: 8192
+  slots: 4096
+  scale_bits: 50
+  first_mod_bits: 60
+channel:
+  mode: uav_noma_pc         # uav_noma_pc | direct_noma | uav_noma | uav_oma
+  los_mode: mean            # mean | random
+  B: 1.0e6                  # Hz
+  fc: 2.0e9                 # Hz
+  P_dev_dBm: 23
+  P_uav_dBm: 30
+  NF_dB: 7
+  h_uav: 100
+  h_bs: 25
+  h_dev: 1.5
+  K_dB: 5                   # Rician (liên kết không đối đất)
+  shadow_dB: 6              # bóng râm liên kết mặt đất (direct_noma)
+  a2g: {a: 9.61, b: 0.16, eta_los_dB: 1, eta_nlos_dB: 20}   # Al-Hourani, đô thị
+  shaper_chunk: 16384       # byte: uav chuyển tiếp chiều lên theo khối này, định nhịp t0 + n/R_k (uav/shaper.py)
+  shaping_tol: 0.05         # vòng có tin nhắn chiều lên ≥ 64 KB lệch R_k quá ±5% => measurement_ok = False (máy quá tải)
+  time_scale: off           # NÉN thời gian kênh: off (thời gian thật) | <số k ≥ 1> | auto. uav cho dữ liệu đi ở R_k·k rồi báo
+                            #   thời gian ×k (= thời gian thật trên kênh); log có time_scale, uplink.*.wall_s. Dùng cho direct_noma.
+  time_scale_floor_bps: 1.0e6   # auto: k = max(1, sàn / min(R_1, R_2)) — chỉ nén vòng có kênh chậm hơn sàn
+  bs: [0, 0]
+  uav: [700, 0]
+  devices: [[900, 0], [1200, 0]]
+devices:
+  split: iid                # iid | noniid
+  dirichlet_alpha: 0.5
+  val_size: 5000            # tập VALIDATION tách từ 50.000 ảnh train gốc (500 ảnh/lớp); train còn 45.000 chia cho 2 thiết bị
+  cpus: 1.6
+  mem: 4g
+train:
+  lr: 0.01
+  batch: 64
+  momentum: 0.9             # như reference_sim/fl.py
+  weight_decay: 5.0e-4
+  local_epochs: 5
+
+protocol:
+  round_timeout_min_s: 600   # bs: timeout chờ kết nối, thiết lập HE, và tối thiểu cho mỗi vòng
+  round_timeout_factor: 5    # bs: timeout vòng = max(min, hệ số × thời gian vòng dự báo) — một container treo => lỗi rõ, không treo mãi

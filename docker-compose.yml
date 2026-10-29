@@ -1,0 +1,86 @@
+# Testbed — 4 container, 2 mạng (CLAUDE.md mục 4).
+# chang1: iot1, iot2, uav   |   chang2: uav, bs
+# Mọi tin nhắn iot <-> bs đi qua uav. perm_seed CHỈ mount vào iot1, iot2.
+services:
+  bs:
+    build: {context: ., dockerfile: bs/Dockerfile, secrets: [extra_ca]}
+    environment:
+      BS_BIND: 0.0.0.0
+      BS_PORT: "6000"
+      CONFIG: config.yaml
+      RESULTS: /app/results
+      CAPTURE: /app/capture
+      OMP_NUM_THREADS: "1"            # = cpus (OpenFHE dùng OpenMP)
+    volumes:
+      - ./results:/app/results
+      - ./capture:/app/capture
+    networks: [chang2]
+    cpus: 1.0
+    mem_limit: 2g
+
+  uav:
+    build: {context: ., dockerfile: uav/Dockerfile, secrets: [extra_ca]}
+    depends_on: [bs]
+    environment:
+      BS_HOST: bs
+      BS_PORT: "6000"
+      LISTEN_HOST: 0.0.0.0
+      IOT_PORTS: "7001,7002"
+      CONFIG: config.yaml
+    networks: [chang1, chang2]
+    cpus: 1.0
+    mem_limit: 2g
+
+  iot1:
+    image: testbed-iot                # iot1, iot2 CÙNG image (mục 4)
+    build: {context: ., dockerfile: iot/Dockerfile, secrets: [extra_ca]}
+    depends_on: [uav]
+    environment:
+      DEVICE_ID: "1"
+      UAV_HOST: uav
+      UAV_PORT: "7001"
+      CONFIG: config.yaml
+      PERM_SEED: /run/secrets/perm_seed
+      DATA_DIR: /app/data
+      NTHREADS: "2"                   # torch
+      OMP_NUM_THREADS: "2"            # OpenFHE; ~cpus 1.6
+    secrets: [perm_seed]             # chỉ iot mới có K
+    volumes:
+      - ./data/train/client1:/app/data/train/client1:ro   # TRAIN của iot1
+      - ./data/val:/app/data/val:ro                         # VALIDATION (iot1 đo mỗi vòng)
+      - ./data/test:/app/data/test:ro                       # TEST (iot1, chỉ để báo cáo)
+    networks: [chang1]
+    cpus: 1.6                         # giới hạn như Raspberry Pi 4 (config.yaml)
+    mem_limit: 4g
+    memswap_limit: 4g
+
+  iot2:
+    image: testbed-iot                # iot1, iot2 CÙNG image (mục 4)
+    build: {context: ., dockerfile: iot/Dockerfile, secrets: [extra_ca]}
+    depends_on: [uav]
+    environment:
+      DEVICE_ID: "2"
+      UAV_HOST: uav
+      UAV_PORT: "7002"
+      CONFIG: config.yaml
+      PERM_SEED: /run/secrets/perm_seed
+      DATA_DIR: /app/data
+      NTHREADS: "2"                   # torch
+      OMP_NUM_THREADS: "2"            # OpenFHE; ~cpus 1.6
+    secrets: [perm_seed]
+    volumes:
+      - ./data/train/client2:/app/data/train/client2:ro   # TRAIN của iot2
+    networks: [chang1]
+    cpus: 1.6
+    mem_limit: 4g
+    memswap_limit: 4g
+
+secrets:
+  perm_seed:
+    file: ./secrets/perm_seed
+  extra_ca:                          # CA phụ chỉ dùng lúc build (xem tools/pip_install.sh); không có thì để file rỗng
+    file: ./certs/extra_ca.pem
+
+networks:
+  chang1: {}
+  chang2: {}

@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+results/*.json
+results/*.jsonl
+capture/*.npz
+secrets/perm_seed
+certs/*.pem
+data/*/*.npy
+data/full/
+weights/*.onnx
+weights/*.pth
+experiments/**/capture/
+.pytest_cache/
+tests/_out/
+# bộ chi phí của demo tùy chỉnh số epoch (đo trên máy này)
+costs_ep*/
+# kết quả các lần demo (CHAY.bat / tools/demo.sh) — chạy thử, không lưu vào git
+experiments/demo/

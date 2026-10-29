@@ -1,0 +1,25 @@
+{
+  "machine_cpu": "11th Gen Intel(R) Core(TM) i9-11950H @ 2.60GHz",
+  "cgroup_cpus": 1.6,
+  "cgroup_mem_bytes": 4294967296,
+  "torch_threads": 2,
+  "omp_threads": "2",
+  "fidelity_factor": 1.4,
+  "M_trainable": 202314,
+  "T_train_first_epoch_raw_s": 30.18137128699982,
+  "T_train_epoch_raw_s": [
+    24.941368104000503,
+    26.59009734600022,
+    24.56633090000014,
+    26.380719196000427,
+    35.31836370000019
+  ],
+  "T_train_epoch_s": 36.9330068744006,
+  "T_trunk_per_image_ms": 6.75187653438627,
+  "T_trunk_once_25k_s": 168.79691335965674,
+  "T_keygen_2party_s": 0.047771192000982406,
+  "ct_bytes": 131819,
+  "share_bytes": 66334,
+  "plain_bytes_per_param": 4,
+  "peak_rss_MB": 1347.28125
+}

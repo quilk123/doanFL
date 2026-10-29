@@ -1,0 +1,8 @@
+# CHỈ dùng cho policy fas10 / fas50 (CLAUDE.md mục 8): mô phỏng FAS gốc — máy chủ GIỮ khóa xáo K, giải xáo từng thiết bị
+# rồi cộng (đọc được phần rõ đã nhiễu của từng thiết bị). Các policy khác: bs KHÔNG có K (không dùng file này).
+#   docker compose -f docker-compose.yml -f docker-compose.fas.yml up      (config.yaml: policy: fas10 | fas50)
+services:
+  bs:
+    environment:
+      PERM_SEED: /run/secrets/perm_seed
+    secrets: [perm_seed]

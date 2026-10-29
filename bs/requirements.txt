@@ -1,0 +1,5 @@
+# bs: điều phối + HE (bước 5: tạo CryptoContext, cộng đồng cấu, ghép phần giải mã).
+numpy
+msgpack
+pyyaml
+openfhe==1.5.1.0.24.4
